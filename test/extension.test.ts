@@ -1,12 +1,10 @@
 import * as mockFs from 'mock-fs'
 
-import {workspace, commands, window, Uri} from 'vscode'
+import {workspace, window, Uri} from 'vscode'
 import {readFileSync} from 'mz/fs'
 import {join} from 'path'
 import * as sinon from 'sinon'
 import {expect} from 'chai'
-
-import * as csprojExtension from '../src/extension'
 
 const up = '../..'
 
@@ -36,7 +34,7 @@ describe('csproj integration tests', () => {
         expect(readFileSync('dir1/file1.ext1').toString()).to.equal('f1')
         // console.info(toUri('dir1').fsPath)
         workspace.openTextDocument(toUri('dir1/file1.ext1')).then((td) => {
-            askSpy.calledOnce.should.be.true
+            expect(askSpy.calledOnce)
             expect(askSpy.args[0][0]).to.equal(`file1.ext1 is not in Project1.csproj, would you like to add it?`, 'prompt')
             done()
         }, (err) => {

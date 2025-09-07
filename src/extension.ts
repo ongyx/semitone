@@ -14,6 +14,15 @@ const debounce = require('lodash.debounce')
 const [YES, NO, NEVER] = ['Yes', 'Not Now', 'Never For This File']
 const _debounceDeleteTime = 2000
 
+/**
+ * The possible values for the autoAdd and autoDelete setting.
+ */
+enum AutoSetting {
+    ON = "on",
+    PROMPT = "prompt",
+    OFF = "off"
+}
+
 let _csprojRemovals: CsprojAndFile[] = []
 
 export function activate(context: vscode.ExtensionContext) {
@@ -74,10 +83,17 @@ function ignoreEvent(context: vscode.ExtensionContext, uri: vscode.Uri) {
     if (!isDesiredFile(context.globalState, uri.fsPath))
         return true
 
+    if (getAutoSetting('autoAdd') === AutoSetting.OFF)
+        return true
+
     if (StatusBar.isVisible())
         return true
 
     return false
+}
+
+function getAutoSetting(key: 'autoAdd' | 'autoDelete'): AutoSetting {
+    return getConfig().get<AutoSetting>(key, AutoSetting.PROMPT)
 }
 
 function getConfig() {
@@ -87,10 +103,11 @@ function getConfig() {
 async function csprojCommand(
     this: vscode.ExtensionContext,
     // Use file path from context or fall back to active document
-    {fsPath}: vscode.Uri = window.activeTextEditor.document.uri,
+    uri: vscode.Uri | undefined = window.activeTextEditor?.document.uri,
     promptAction = false,
     bulkMode = false
 ): Promise<Csproj | void> {
+    const { fsPath } = uri || {};
     if (!fsPath) return
 
     // Skip if we're saving a csproj file, or we are a standalone file without a path.
@@ -116,14 +133,30 @@ async function csprojCommand(
             return
         }
 
-        let pickResult = (promptAction === true)
-            ? await window.showInformationMessage(
-                `${fileName} is not in ${csproj.name}, would you like to add it?`,
-                YES, NEVER)
-            : YES
+        let pickResult: string
+
+        const autoAdd = getConfig().get<AutoSetting>('autoAdd', AutoSetting.PROMPT)
+        switch (autoAdd) {
+            case AutoSetting.ON:
+                pickResult = YES
+                break
+            case AutoSetting.OFF:
+                // The actual handling of AutoSetting.OFF is in ignoreEvent(),
+                // since we have no way of knowing if this command was called through an event and not directly.
+                pickResult = YES
+                break;
+            case AutoSetting.PROMPT: {
+                pickResult = promptAction
+                    ? await window.showInformationMessage(
+                        `${fileName} is not in ${csproj.name}, would you like to add it?`, YES, NEVER
+                    ) ?? NO
+                    : YES
+                break
+            }
+        }
 
         // Default to "No" action if user blurs the picker
-        const added = await (pickActions[pickResult] || pickActions[NO])({
+        const added = await (pickActions[pickResult])({
             filePath: fsPath,
             fileName,
             bulkMode,
@@ -160,8 +193,9 @@ const pickActions = {
 
         return true
     },
-    [NO]({ csproj }: ActionArgs) {
+    async [NO]({ csproj }: ActionArgs) {
         StatusBar.displayItem(csproj.name, false)
+        return false
     },
     async [NEVER]({ filePath, globalState, fileName }: ActionArgs) {
         await updateIgnoredPaths(globalState, filePath)
@@ -170,6 +204,7 @@ const pickActions = {
         window.showInformationMessage(
             `Added ${fileName} to ignore list, to clear list, ` +
             `run the "csproj: Clear ignored paths"`)
+        return false
     }
 }
 
@@ -217,13 +252,20 @@ const debouncedRemoveFromCsproj = debounce(
     async (removals: CsprojAndFile[], onCall: Function) => {
         onCall()
 
-        const message = removals.length > 1
-            ? multiDeleteMessage(removals.map(rem => rem.filePath))
-            : singleDeleteMessage(removals[0].csproj, removals[0].filePath)
+        switch (getAutoSetting('autoDelete')) {
+            case AutoSetting.ON:
+                break
+            case AutoSetting.PROMPT: {
+                const message = removals.length > 1
+                    ? multiDeleteMessage(removals.map(rem => rem.filePath))
+                    : singleDeleteMessage(removals[0].csproj, removals[0].filePath)
 
-        if (getConfig().get('silentDeletion', false)
-            || await window.showWarningMessage(message, YES) !== YES) {
-            return
+                if (await window.showWarningMessage(message, YES) !== YES) {
+                    return
+                }
+            }
+            case AutoSetting.OFF:
+                return
         }
 
         for (const {filePath, csproj} of removals) {
@@ -282,10 +324,13 @@ function multiDeleteMessage(filePaths: string[]) {
 async function csprojRemoveCommand(
     this: vscode.ExtensionContext,
     // Use file path from context or fall back to active document
-    {fsPath}: vscode.Uri = window.activeTextEditor.document.uri,
+    uri: vscode.Uri | undefined = window.activeTextEditor?.document.uri,
     csproj?: Csproj,
     bulkMode = false
 ): Promise<Csproj | void> {
+    const {fsPath} = uri || {}
+    if (!fsPath) return;
+
     const wasDir = wasDirectory(fsPath)
     const fileName = path.basename(fsPath)
     console.log(`extension.csproj#remove(${fileName})`)
