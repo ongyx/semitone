@@ -1,146 +1,174 @@
 {
-  "name": "vscode-csproj",
-  "displayName": "VS Code .csproj",
-  "description": "Add/remove files from .csproj.",
-  "version": "0.7.0",
-  "publisher": "lucasazzola",
-  "engines": {
-    "vscode": "^1.100.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "*"
-  ],
-  "icon": "img/icon.png",
-  "main": "./out/src/extension",
-  "contributes": {
-    "commands": [
-      {
-        "command": "extension.csproj.add",
-        "title": "csproj: Include in Project"
-      },
-      {
-        "command": "extension.csproj.remove",
-        "title": "csproj: Remove from Project"
-      },
-      {
-        "command": "extension.csproj.clearIgnoredPaths",
-        "title": "csproj: Clear Ignored Paths"
-      }
-    ],
-    "configuration": {
-      "type": "object",
-      "title": "csproj configuration",
-      "properties": {
-        "csproj.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Turn this extension on or off."
-        },
-        "csproj.itemType": {
-          "type": [
-            "string",
-            "object"
-          ],
-          "default": {
-            "*": "Content",
-            ".cs": "Compile",
-            ".ts": "TypeScriptCompile"
-          },
-          "description": "Type of XML element to put in the csproj file."
-        },
-        "csproj.includeRegex": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": ".*",
-          "description": "A regular expression to include file paths by."
-        },
-        "csproj.excludeRegex": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null,
-          "description": "A regular expression to exclude file paths by."
-        },
-        "csproj.autoAdd": {
-          "type": "string",
-          "enum": [
-            "on",
-            "prompt",
-            "off"
-          ],
-          "enumDescriptions": [
-            "Automatically add new items.",
-            "Prompt before adding new items.",
-            "Don't prompt to add new items."
-          ],
-          "default": "prompt",
-          "description": "Whether or not to add items to the csproj file when new files are created."
-        },
-        "csproj.autoDelete": {
-          "type": "string",
-          "enum": [
-            "on",
-            "prompt",
-            "off"
-          ],
-          "enumDescriptions": [
-            "Automatically delete removed items.",
-            "Prompt before deleting removed items.",
-            "Don't prompt to delete removed items."
-          ],
-          "default": "prompt",
-          "description": "Whether or not to delete items from the csproj file when their existing files are removed."
-        }
-      }
-    },
-    "menus": {
-      "explorer/context": [
-        {
-          "command": "extension.csproj.add",
-          "group": "1_modification"
-        },
-        {
-          "command": "extension.csproj.remove",
-          "group": "1_modification"
-        }
-      ]
-    }
-  },
-  "scripts": {
-    "vscode:prepublish": "tsc -p ./",
-    "compile": "tsc -watch -p ./",
-    "package": "vsce package --allow-star-activation"
-  },
-  "devDependencies": {
-    "@types/chai": "^5.2.2",
-    "@types/mocha": "^10.0.10",
-    "@types/mock-fs": "^4.13.4",
-    "@types/mz": "2.7.9",
-    "@types/node": "^24.3.1",
-    "@types/sinon": "^17.0.4",
-    "@types/vscode": "^1.100.0",
-    "@vscode/vsce": "^3.6.0",
-    "chai": "^6.0.1",
-    "mocha": "^11.7.2",
-    "mock-fs": "^5.5.0",
-    "sinon": "^21.0.0",
-    "typescript": "^5.9.2"
-  },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/azz/vscode-csproj.git"
-  },
-  "dependencies": {
-    "@azz/elementtree": "^0.1.6",
-    "lodash.debounce": "^4.0.8",
-    "mz": "^2.7.0",
-    "strip-bom": "^5.0.0"
-  }
+	"name": "vscode-csproj",
+	"displayName": "VS Code .csproj",
+	"description": "Add/remove files from .csproj.",
+	"version": "0.7.0",
+	"publisher": "lucasazzola",
+	"engines": {
+		"vscode": "^1.100.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"*"
+	],
+	"icon": "img/icon.png",
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "extension.csproj.add",
+				"title": "csproj: Include in Project"
+			},
+			{
+				"command": "extension.csproj.remove",
+				"title": "csproj: Remove from Project"
+			},
+			{
+				"command": "extension.csproj.clearIgnoredPaths",
+				"title": "csproj: Clear Ignored Paths"
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "vscode-csproj",
+			"properties": {
+				"csproj.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Turn this extension on or off."
+				},
+				"csproj.projectFiles": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"title": "projectFile",
+						"properties": {
+							"path": {
+								"type": "string",
+								"description": "The path to the project file."
+							},
+							"glob": {
+								"type": "string",
+								"description": "The file, directory, or a glob to match paths against."
+							}
+						}
+					},
+					"default": [],
+					"description": "The project files to sync to in order of priority."
+				},
+				"csproj.itemType": {
+					"type": [
+						"string",
+						"object"
+					],
+					"default": {
+						"*": "Content",
+						".cs": "Compile",
+						".ts": "TypeScriptCompile"
+					},
+					"description": "The project item type for each file extension (https://learn.microsoft.com/en-us/visualstudio/msbuild/common-msbuild-project-items)."
+				},
+				"csproj.includeRegex": {
+					"type": [
+						"string",
+						"null"
+					],
+					"default": ".*",
+					"description": "A regular expression to include file paths by."
+				},
+				"csproj.excludeRegex": {
+					"type": [
+						"string",
+						"null"
+					],
+					"default": null,
+					"description": "A regular expression to exclude file paths by."
+				},
+				"csproj.autoAdd": {
+					"type": "string",
+					"enum": [
+						"on",
+						"prompt",
+						"off"
+					],
+					"enumDescriptions": [
+						"Automatically add new items.",
+						"Prompt before adding new items.",
+						"Don't prompt to add new items."
+					],
+					"default": "prompt",
+					"description": "Whether or not to add items to the project file when new files are opened."
+				},
+				"csproj.autoDelete": {
+					"type": "string",
+					"enum": [
+						"on",
+						"prompt",
+						"off"
+					],
+					"enumDescriptions": [
+						"Automatically remove deleted items.",
+						"Prompt before removing deleted items.",
+						"Don't prompt to remove deleted items."
+					],
+					"default": "prompt",
+					"description": "Whether or not to remove items from the project file when their files are deleted."
+				}
+			}
+		},
+		"menus": {
+			"explorer/context": [
+				{
+					"command": "extension.csproj.add",
+					"group": "1_modification"
+				},
+				{
+					"command": "extension.csproj.remove",
+					"group": "1_modification"
+				}
+			]
+		}
+	},
+	"scripts": {
+		"compile": "npm run check-types && node esbuild.mjs",
+		"check-types": "tsc --noEmit --project tsconfig.json",
+		"check": "npx @biomejs/biome check --write",
+		"watch": "npm-run-all -p watch:*",
+		"watch:esbuild": "node esbuild.js --watch",
+		"watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+		"vscode:prepublish": "npm run check && npm run package",
+		"vscode:package": "vsce package --allow-star-activation",
+		"package": "npm run check-types && node esbuild.mjs --production",
+		"test": "tsc -p . && vscode-test"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.10",
+		"@types/chai": "^5.2.3",
+		"@types/mocha": "^10.0.10",
+		"@types/mock-fs": "^4.13.4",
+		"@types/node": "^25.0.3",
+		"@types/sinon": "^21.0.0",
+		"@types/vscode": "^1.100.0",
+		"@vscode/test-cli": "^0.0.12",
+		"@vscode/test-electron": "^2.5.2",
+		"@vscode/vsce": "^3.7.1",
+		"chai": "^6.2.2",
+		"esbuild": "^0.27.2",
+		"mocha": "^11.7.5",
+		"mock-fs": "^5.5.0",
+		"sinon": "^21.0.1",
+		"typescript": "^5.9.3"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/azz/vscode-csproj.git"
+	},
+	"dependencies": {
+		"linkedom": "^0.18.12",
+		"minimatch": "^10.1.1",
+		"p-debounce": "^5.1.0"
+	}
 }
