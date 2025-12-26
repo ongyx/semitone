@@ -68,8 +68,7 @@ export class Csproj {
 		}
 
 		const item = group.appendChild(this._xml.createElement(itemType)) as Element
-		const rel = this.asRelativePath(uri)
-		item.setAttribute("Include", rel)
+		item.setAttribute("Include", this.asRelativePath(uri))
 	}
 
 	/**
@@ -78,7 +77,7 @@ export class Csproj {
 	 * @returns True if so, otherwise false.
 	 */
 	hasItem(uri: Uri): boolean {
-		const rel = this.asRelativePath(uri)
+		const rel = this.asRelativePath(uri, true)
 
 		return this._xml.querySelector(`ItemGroup > *[Include="${rel}"]`) !== null
 	}
@@ -90,7 +89,7 @@ export class Csproj {
 	 * @returns True if one or more items were removed, otherwise false.
 	 */
 	removeItem(uri: Uri, isDirectory: boolean = false): boolean {
-		const rel = this.asRelativePath(uri)
+		const rel = this.asRelativePath(uri, true)
 
 		const items: Element[] = isDirectory
 			? // Find all items prefixed by the directory path.
@@ -101,7 +100,7 @@ export class Csproj {
 		for (const item of items) {
 			const group = item.parentElement as Element
 			if (group.childNodes.length === 1) {
-				// The ItemGroup will be empty, so remove it instead.
+				// The ItemGroup will be empty, so remove it entirely.
 				group.remove()
 			} else {
 				// Only remove the item.
@@ -134,13 +133,12 @@ export class Csproj {
 	/**
 	 * Computes the path relative to the directory of the MSBuild file.
 	 * @param uri The URI path.
+	 * @param isSelectorQuery Whether or not to use double backslashes instead of one, for use with `querySelector()`.
 	 * @returns The relative path.
 	 */
-	private asRelativePath(uri: Uri): string {
-		const base = path.dirname(workspace.asRelativePath(this.uri))
-		const rel = path.relative(base, uri.fsPath)
-
+	private asRelativePath(uri: Uri, isSelectorQuery: boolean = false): string {
+		const rel = path.relative(path.dirname(this.uri.fsPath), uri.fsPath)
 		// Always use windows-style seperators.
-		return rel.replace(/\//g, "\\")
+		return rel.replaceAll(path.sep, isSelectorQuery ? "\\\\" : "\\")
 	}
 }

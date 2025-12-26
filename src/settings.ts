@@ -1,11 +1,11 @@
+import * as path from "node:path"
+import { minimatch } from "minimatch"
 import {
 	type ExtensionContext,
 	type Uri,
 	type WorkspaceConfiguration,
 	workspace,
 } from "vscode"
-
-import path = require("node:path")
 
 /**
  * The extension name for retrieving settings or setting commands.
@@ -59,6 +59,17 @@ export function getProjectFiles(): ProjectFile[] {
 }
 
 /**
+ * Returns the project file whose glob matches the URI.
+ * @param uri The URI to match against.
+ * @returns The project file, or undefined if no match was found.
+ */
+export function getProjectFileForUri(uri: Uri): ProjectFile | undefined {
+	const rel = workspace.asRelativePath(uri)
+
+	return getProjectFiles().find((p) => minimatch(rel, p.glob))
+}
+
+/**
  * Returns the itemTypes setting.
  * @returns The value.
  */
@@ -89,18 +100,18 @@ export function getItemTypeForFile(name: string): string {
  * Returns the includeRegex setting.
  * @returns The value as a regex.
  */
-export function getIncludeRegex(): RegExp | null {
-	const pat = getConfig().get<string | null>("includeRegex", null)
-	return pat ? new RegExp(pat) : null
+export function getIncludeRegex(): RegExp | undefined {
+	const pat = getConfig().get<string>("includeRegex")
+	return pat ? new RegExp(pat) : undefined
 }
 
 /**
  * Returns the excludeRegex setting.
  * @returns The value as a regex.
  */
-export function getExcludeRegex(): RegExp | null {
-	const pat = getConfig().get<string | null>("excludeRegex", null)
-	return pat ? new RegExp(pat) : null
+export function getExcludeRegex(): RegExp | undefined {
+	const pat = getConfig().get<string | undefined>("excludeRegex", undefined)
+	return pat ? new RegExp(pat) : undefined
 }
 
 /**
@@ -145,8 +156,8 @@ export async function setIgnoredPaths(
  */
 export class UriFilter {
 	private readonly ignoredPaths: Set<string>
-	private readonly includeRegex: RegExp | null
-	private readonly excludeRegex: RegExp | null
+	private readonly includeRegex?: RegExp
+	private readonly excludeRegex?: RegExp
 
 	constructor(context: ExtensionContext) {
 		this.ignoredPaths = new Set(getIgnoredPaths(context))
@@ -165,7 +176,7 @@ export class UriFilter {
 			return false
 		}
 
-		if (this.includeRegex !== null && !this.includeRegex.test(uri.fsPath)) {
+		if (this.includeRegex !== undefined && !this.includeRegex.test(uri.fsPath)) {
 			return false
 		}
 

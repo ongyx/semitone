@@ -1,4 +1,3 @@
-import { minimatch } from "minimatch"
 import {
 	type ExtensionContext,
 	type FileSystemWatcher,
@@ -55,10 +54,7 @@ export class Cache {
 		}
 
 		// Get the first project file with a matching glob for the document URI.
-		const documentPath = workspace.asRelativePath(uri)
-		const projectPath = settings
-			.getProjectFiles()
-			.find((p) => minimatch(documentPath, p.glob))?.path
+		const projectPath = settings.getProjectFileForUri(uri)?.path
 		if (projectPath === undefined) {
 			return
 		}

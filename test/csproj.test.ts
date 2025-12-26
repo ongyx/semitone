@@ -1,59 +1,74 @@
 import * as assert from "node:assert"
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
-import { tmpdir } from "node:os"
-import { join } from "node:path"
-import { Uri } from "vscode"
+import * as fs from "node:fs/promises"
 import { Csproj } from "../src/csproj"
+import { TempFs } from "./tempfs"
+
+const MOCK_FILES = {
+	"Test1.cs": `Console.WriteLine("Hello World!");`,
+	"Test2.ts": `console.log("Hello World!")`,
+	"Test3.html":
+		"<!DOCTYPE html><html><body><h1>Hello World!</h1></body></html>",
+}
 
 const CSP_ORIGINAL = `<?xml version="1.0" encoding="utf-8"?><Project />`
-const CSP_MODIFIED = `<?xml version="1.0" encoding="utf-8"?><Project><ItemGroup><Compile Include="Test1.cs" /></ItemGroup><ItemGroup><TypescriptCompile Include="Test2.ts" /></ItemGroup><ItemGroup><Content Include="Test3.html" /></ItemGroup></Project>`
+const CSP_MODIFIED = `<?xml version="1.0" encoding="utf-8"?><Project><ItemGroup><Compile Include="src\\Test1.cs" /></ItemGroup><ItemGroup><TypescriptCompile Include="src\\Test2.ts" /></ItemGroup><ItemGroup><Content Include="src\\Test3.html" /></ItemGroup></Project>`
 
-suite("csproj", () => {
-	let tempDir = ""
+describe("csproj", () => {
+	let tfs: TempFs | undefined
 
-	suiteSetup(async () => {
-		tempDir = await mkdtemp(join(tmpdir(), "test-"))
+	beforeEach(async () => {
+		tfs = await TempFs.create()
 	})
 
-	test("addItem", async () => {
-		const csprojPath = join(tempDir, "test.csproj")
-		await writeFile(csprojPath, CSP_ORIGINAL)
+	afterEach(async () => {
+		tfs?.remove()
+	})
 
-		const csproj = await Csproj.open(Uri.file(csprojPath))
+	it("should add multiple items to the project", async () => {
+		assert.ok(tfs)
+		await tfs.mock({
+			"Test.csproj": CSP_ORIGINAL,
+			...MOCK_FILES,
+		})
 
-		csproj.addItem("Compile", Uri.file(join(tempDir, "Test1.cs")))
-		csproj.addItem("TypescriptCompile", Uri.file(join(tempDir, "Test2.ts")))
-		csproj.addItem("Content", Uri.file(join(tempDir, "Test3.html")))
+		const csproj = await Csproj.open(tfs.absuri("Test.csproj"))
+
+		csproj.addItem("Compile", tfs.absuri("src/Test1.cs"))
+		csproj.addItem("TypescriptCompile", tfs.absuri("src/Test2.ts"))
+		csproj.addItem("Content", tfs.absuri("src/Test3.html"))
 
 		assert.strictEqual(csproj.serialize(), CSP_MODIFIED)
 	})
 
-	test("removeItem", async () => {
-		const csprojPath = join(tempDir, "test.csproj")
-		await writeFile(csprojPath, CSP_MODIFIED)
+	it("should remove multiple items from the project", async () => {
+		assert.ok(tfs)
+		await tfs.mock({
+			"Test.csproj": CSP_MODIFIED,
+			...MOCK_FILES,
+		})
 
-		const csproj = await Csproj.open(Uri.file(csprojPath))
+		const csproj = await Csproj.open(tfs.absuri("Test.csproj"))
 
-		csproj.removeItem(Uri.file(join(tempDir, "Test1.cs")))
-		csproj.removeItem(Uri.file(join(tempDir, "Test2.ts")))
-		csproj.removeItem(Uri.file(join(tempDir, "Test3.html")))
+		csproj.removeItem(tfs.absuri("src/Test1.cs"))
+		csproj.removeItem(tfs.absuri("src/Test2.ts"))
+		csproj.removeItem(tfs.absuri("src/Test3.html"))
 
 		assert.strictEqual(csproj.serialize(), CSP_ORIGINAL)
 	})
 
-	test("save", async () => {
-		const csprojPath = join(tempDir, "test.csproj")
-		const newCsprojPath = join(tempDir, "test_identical.csproj")
-		await writeFile(csprojPath, CSP_ORIGINAL)
+	it("should save the project to disk identically", async () => {
+		assert.ok(tfs)
+		await tfs.mock({
+			"Test.csproj": CSP_ORIGINAL,
+			...MOCK_FILES,
+		})
 
-		const csproj = await Csproj.open(Uri.file(csprojPath))
-		await csproj.save(Uri.file(newCsprojPath))
+		const identicalPath = tfs.absuri("TestIdentical.csproj")
 
-		const data = await readFile(newCsprojPath, { encoding: "utf-8" })
+		const csproj = await Csproj.open(tfs.absuri("Test.csproj"))
+		await csproj.save(identicalPath)
+
+		const data = await fs.readFile(identicalPath.fsPath, "utf8")
 		assert.strictEqual(data, CSP_ORIGINAL)
-	})
-
-	suiteTeardown(async () => {
-		await rm(tempDir, { recursive: true })
 	})
 })

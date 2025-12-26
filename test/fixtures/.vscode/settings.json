@@ -1,0 +1,8 @@
+{
+    "csproj.projectFiles": [
+        {
+            "path": "Sample.csproj",
+            "glob": "src/**/*.cs",
+        }
+    ]
+}
