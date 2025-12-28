@@ -1,8 +1,8 @@
 {
-    "csproj.projectFiles": [
-        {
-            "path": "Sample.csproj",
-            "glob": "src/**/*.cs",
-        }
-    ]
+	"csproj.projectFiles": [
+		{
+			"path": "Sample.csproj",
+			"glob": "src/**/*.cs"
+		}
+	]
 }

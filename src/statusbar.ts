@@ -45,14 +45,14 @@ export enum Status {
  * A status bar for the active file.
  */
 export class StatusBar {
-	private _item: StatusBarItem
+	private item: StatusBarItem
 	private _status: Status = Status.Unavailable
 
 	constructor(context: ExtensionContext) {
-		this._item = window.createStatusBarItem(StatusBarAlignment.Left)
+		this.item = window.createStatusBarItem(StatusBarAlignment.Left)
 		this.unavailable()
 
-		context.subscriptions.push(this._item)
+		context.subscriptions.push(this.item)
 	}
 
 	/**
@@ -67,13 +67,13 @@ export class StatusBar {
 	 * @param csproj The project.
 	 */
 	inProject(csproj: Csproj) {
-		this._item.text = `$(folder-active) Contained in ${csproj.name}`
-		this._item.command = COMMAND_REMOVE
-		this._item.backgroundColor = undefined
-		this._item.tooltip = new MarkdownString(
+		this.item.text = `$(folder-active) Contained in ${csproj.name}`
+		this.item.command = COMMAND_REMOVE
+		this.item.backgroundColor = undefined
+		this.item.tooltip = new MarkdownString(
 			`Click to remove this file from the project.`,
 		)
-		this._item.show()
+		this.item.show()
 		this._status = Status.InProject
 	}
 
@@ -82,24 +82,24 @@ export class StatusBar {
 	 * @param csproj The project.
 	 */
 	notInProject(csproj: Csproj) {
-		this._item.text = `$(folder) Add to ${csproj.name}`
-		this._item.command = COMMAND_ADD
-		this._item.backgroundColor = undefined
-		this._item.tooltip = new MarkdownString(
-			`Click to add this file to the project.`
+		this.item.text = `$(folder) Add to ${csproj.name}`
+		this.item.command = COMMAND_ADD
+		this.item.backgroundColor = undefined
+		this.item.tooltip = new MarkdownString(
+			`Click to add this file to the project.`,
 		)
-		this._item.show()
+		this.item.show()
 		this._status = Status.NotInProject
 	}
 
 	projectNotFound() {
-		this._item.text = `$(question) Project not found`
-		this._item.command = undefined
-		this._item.backgroundColor = BG_ERROR
-		this._item.tooltip = new MarkdownString(
-			`File does not match to any project, please check your \`csproj.projectFiles\` user/workspace setting.`
+		this.item.text = `$(question) Project not found`
+		this.item.command = undefined
+		this.item.backgroundColor = BG_ERROR
+		this.item.tooltip = new MarkdownString(
+			`File does not match to any project, please check your \`csproj.projectFiles\` user/workspace setting.`,
 		)
-		this._item.show()
+		this.item.show()
 		this._status = Status.ProjectNotFound
 	}
 
@@ -107,16 +107,16 @@ export class StatusBar {
 	 * Indicates that the active file is ignored by user/workspace settings.
 	 */
 	ignored() {
-		this._item.text = `$(info) Ignored`
-		this._item.command = undefined
-		this._item.backgroundColor = BG_WARNING
-		this._item.tooltip = new MarkdownString(
+		this.item.text = `$(info) Ignored`
+		this.item.command = undefined
+		this.item.backgroundColor = BG_WARNING
+		this.item.tooltip = new MarkdownString(
 			`File is ignored by one of these user/workspace settings:
 * \`csproj.include\`
 * \`csproj.exclude\`
-* \`csproj.ignoredPaths\` (run "csproj: Clear ignored paths")`
+* \`csproj.ignoredPaths\` (run "csproj: Clear ignored paths")`,
 		)
-		this._item.show()
+		this.item.show()
 		this._status = Status.Ignored
 	}
 
@@ -124,7 +124,7 @@ export class StatusBar {
 	 * Indicates that the active file's status is unavailable.
 	 */
 	unavailable() {
-		this._item.hide()
+		this.item.hide()
 		this._status = Status.Unavailable
 	}
 }

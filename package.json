@@ -22,15 +22,15 @@
 	"main": "./out/extension.js",
 	"scripts": {
 		"clean": "rimraf out",
-		"check": "npx @biomejs/biome check --write",
+		"fix": "npx @biomejs/biome check --write",
 		"check-types": "tsc --noEmit --project tsconfig.json",
-		"watch": "npm-run-all -p watch:*",
+		"watch": "concurrently --kill-others \"npm run watch:esbuild\" \"npm run watch:tsc\"",
 		"watch:esbuild": "node esbuild.mjs --watch",
 		"watch:tsc": "tsc --watch --project tsconfig.json",
 		"compile": "npm run check-types && npm run clean && node esbuild.mjs",
 		"package": "npm run check-types && npm run clean && node esbuild.mjs --production",
 		"test": "npm run compile && tsc --project tsconfig.json && vscode-test",
-		"vscode:prepublish": "npm run check && npm run package",
+		"vscode:prepublish": "npm run fix && npm run package",
 		"vscode:package": "vsce package --allow-star-activation"
 	},
 	"devDependencies": {
@@ -49,7 +49,9 @@
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
-		"linkedom": "^0.18.12",
+		"cheerio": "^1.1.2",
+		"domelementtype": "^2.3.0",
+		"domhandler": "^5.0.3",
 		"minimatch": "^10.1.1",
 		"p-debounce": "^5.1.0"
 	},

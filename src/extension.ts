@@ -85,7 +85,9 @@ class ExtensionImpl {
 
 			const filter = new settings.UriFilter(this.context)
 			if (!filter.isValid(uri)) {
-				console.log(`extension.csproj#onOpen(${uri.fsPath}): ignored by user/workspace settings`)
+				console.log(
+					`extension.csproj#onOpen(${uri.fsPath}): ignored by user/workspace settings`,
+				)
 				this.statusBar.ignored()
 				return
 			}

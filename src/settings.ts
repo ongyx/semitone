@@ -176,7 +176,10 @@ export class UriFilter {
 			return false
 		}
 
-		if (this.includeRegex !== undefined && !this.includeRegex.test(uri.fsPath)) {
+		if (
+			this.includeRegex !== undefined &&
+			!this.includeRegex.test(uri.fsPath)
+		) {
 			return false
 		}
 

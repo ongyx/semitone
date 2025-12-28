@@ -1,11 +1,21 @@
 import * as path from "node:path"
-import { DOMParser } from "linkedom"
-import type { Element } from "linkedom/types/interface/element"
-import type { XMLDocument } from "linkedom/types/xml/document"
+import { type Cheerio, type CheerioAPI, loadBuffer } from "cheerio"
+import { ElementType } from "domelementtype"
+import { type AnyNode, Text } from "domhandler"
 import { type Uri, workspace } from "vscode"
+import {
+	detectIndent,
+	getNodes,
+	type Indent,
+	trimAfter,
+	trimBefore,
+	trimEnd,
+} from "./utils"
+
+const RE_SELF_CLOSING_TAG = /\/>$/gm
 
 /**
- * An MSBuild project file parsed from XML.
+ * An MSBuild project.
  */
 export class Csproj {
 	/**
@@ -19,29 +29,34 @@ export class Csproj {
 	/**
 	 * The XML document.
 	 */
-	private readonly _xml: XMLDocument
+	private readonly xml: CheerioAPI
+	/**
+	 * The indentation in use.
+	 */
+	private readonly indent: Indent
 
 	/**
-	 * Opens a project file on disk and parses it.
+	 * Parses a project file on disk.
 	 * @param uri The URI of the project file.
 	 * @returns The project.
 	 */
 	static async open(uri: Uri): Promise<Csproj> {
 		const data = await workspace.fs.readFile(uri)
-		const xml = new DOMParser().parseFromString(
-			new TextDecoder().decode(data),
-			"text/xml",
-		)
+		// According to NodeJS docs, this avoids an allocation.
+		// https://nodejs.org/api/buffer.html#static-method-bufferfromarraybuffer-byteoffset-length
+		const buf = Buffer.from(data.buffer)
+		const xml = loadBuffer(buf, { xml: true })
 		const csproj = new Csproj(uri, xml)
 
 		return csproj
 	}
 
 	// NOTE: Constructor is necessary to satisfy readonly properties.
-	private constructor(uri: Uri, xml: XMLDocument) {
+	private constructor(uri: Uri, xml: CheerioAPI) {
 		this.name = path.basename(uri.fsPath)
 		this.uri = uri
-		this._xml = xml
+		this.xml = xml
+		this.indent = detectIndent(xml)
 	}
 
 	/**
@@ -50,25 +65,21 @@ export class Csproj {
 	 * @param uri The URI to reference in the item.
 	 */
 	addItem(itemType: string, uri: Uri) {
-		const groups: Element[] = this._xml.querySelectorAll(
-			`ItemGroup:has(${itemType})`,
-		)
+		const groups = this.xml(`ItemGroup:has(${itemType})`)
 
-		let group: Element
+		let group: Cheerio<AnyNode>
 		if (groups.length > 0) {
 			// Get the last ItemGroup element containing the item type.
-			group = groups[groups.length - 1]
+			group = groups.last()
 		} else {
 			// Create a new ItemGroup for the item type.
 			// NOTE: ItemGroups go under the top-level Project element.
-			const project = this._xml.querySelector("Project")
-			group = project.appendChild(
-				this._xml.createElement("ItemGroup"),
-			) as Element
+			group = this.xml("<ItemGroup/>").appendTo(this.xml("Project"))
 		}
 
-		const item = group.appendChild(this._xml.createElement(itemType)) as Element
-		item.setAttribute("Include", this.asRelativePath(uri))
+		this.xml(`<${itemType}/>`)
+			.attr("Include", this.asRelativePath(uri))
+			.appendTo(group)
 	}
 
 	/**
@@ -79,7 +90,7 @@ export class Csproj {
 	hasItem(uri: Uri): boolean {
 		const rel = this.asRelativePath(uri, true)
 
-		return this._xml.querySelector(`ItemGroup > *[Include="${rel}"]`) !== null
+		return this.xml(`ItemGroup > *[Include="${rel}"]`).length > 0
 	}
 
 	/**
@@ -91,34 +102,66 @@ export class Csproj {
 	removeItem(uri: Uri, isDirectory: boolean = false): boolean {
 		const rel = this.asRelativePath(uri, true)
 
-		const items: Element[] = isDirectory
+		const items = isDirectory
 			? // Find all items prefixed by the directory path.
-				this._xml.querySelectorAll(`ItemGroup > *[Include*="${rel}"]`)
+				this.xml(`ItemGroup > *[Include*="${rel}"]`)
 			: // Find all items with the file path.
-				this._xml.querySelectorAll(`ItemGroup > *[Include="${rel}"]`)
+				this.xml(`ItemGroup > *[Include="${rel}"]`)
 
-		for (const item of items) {
-			const group = item.parentElement as Element
-			if (group.childNodes.length === 1) {
-				// The ItemGroup will be empty, so remove it entirely.
-				group.remove()
-			} else {
-				// Only remove the item.
-				item.remove()
-			}
-		}
+		items.remove()
+
+		// Remove any empty ItemGroups.
+		this.xml(`ItemGroup:not(:has(*))`).remove()
 
 		return items.length > 0
 	}
 
 	/**
-	 * Serializes the project to XML.
+	 * Prettifies the project document by adding indentation where necessary.
+	 */
+	prettify(): void {
+		const newline = this.indent.newline
+		const whitespace = this.indent.whitespace
+
+		for (const { node, depth } of getNodes(this.xml)) {
+			if (node.type === ElementType.Tag) {
+				// Delete opening and closing indent, if any.
+				trimBefore(this.xml, node)
+				trimEnd(this.xml, node)
+
+				if (whitespace !== "") {
+					// Add whitespace to the tag according to depth.
+					const indentation = `${newline}${whitespace.repeat(depth)}`
+
+					this.xml(new Text(indentation)).insertBefore(this.xml(node))
+
+					// Only add the closing indent if the node contains tags.
+					if (node.children.some((n) => n.type === ElementType.Tag)) {
+						this.xml(new Text(indentation)).appendTo(this.xml(node))
+					}
+				}
+			}
+		}
+
+		// If the Project element is empty, clear all nodes.
+		const project = this.xml("Project")
+		if (project.children().length === 0) {
+			project.empty()
+		}
+
+		// Delete trailing whitespace, then add a single newline after the Project element.
+		trimAfter(this.xml, project[0])
+		this.xml(new Text(this.indent.newline)).insertAfter(project)
+	}
+
+	/**
+	 * Serializes the project to XML. {@link prettify} is automatically called.
 	 * @returns The serialized XML.
 	 */
 	serialize(): string {
-		// NOTE: linkedom doesn't have XMLSerializer; documents are serialized using toString().
-		// See https://github.com/WebReflection/linkedom/issues/181
-		return this._xml.toString()
+		this.prettify()
+		// Add a space to all self-closing tags (e.g., <Compile Include="..."/> becomes <Compile Include="..." />)
+		return this.xml.xml().replace(RE_SELF_CLOSING_TAG, " />")
 	}
 
 	/**
@@ -131,7 +174,7 @@ export class Csproj {
 	}
 
 	/**
-	 * Computes the path relative to the directory of the MSBuild file.
+	 * Computes the path relative to the project directory.
 	 * @param uri The URI path.
 	 * @param isSelectorQuery Whether or not to use double backslashes instead of one, for use with `querySelector()`.
 	 * @returns The relative path.
