@@ -1,6 +1,6 @@
 import * as assert from "node:assert"
 import * as fs from "node:fs/promises"
-import { Csproj } from "../src/csproj"
+import { Csproj } from "../src/internal/csproj"
 import { TempFs } from "./tempfs"
 
 const MOCK_FILES = {

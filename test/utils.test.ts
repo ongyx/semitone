@@ -9,14 +9,30 @@ import {
 	getNodes,
 	isWhitespace,
 	type NodeYield,
+	spaceCase,
 	trimAfter,
 	trimBefore,
 	trimEnd,
-} from "../src/utils"
+} from "../src/internal/utils"
 
 const loadXml = (src: string): CheerioAPI => load(src, { xml: true })
 
 describe("utils", () => {
+	describe("spaceCase()", () => {
+		it("should add spaces before uppercase letters", () => {
+			assert.strictEqual(spaceCase("ItemGroup"), "Item Group")
+			assert.strictEqual(spaceCase("CompileInclude"), "Compile Include")
+		})
+
+		it("should trim leading spaces", () => {
+			assert.strictEqual(spaceCase("ABC"), "A B C")
+		})
+
+		it("should return single words unchanged", () => {
+			assert.strictEqual(spaceCase("Project"), "Project")
+		})
+	})
+
 	describe("isWhitespace()", () => {
 		it("should detect whitespace", () => {
 			assert.ok(isWhitespace(new Text("\r\n  ")))

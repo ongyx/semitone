@@ -92,6 +92,9 @@ export class StatusBar {
 		this._status = Status.NotInProject
 	}
 
+	/**
+	 * Indicates that no project was found for the active file.
+	 */
 	projectNotFound() {
 		this.item.text = `$(question) Project not found`
 		this.item.command = undefined

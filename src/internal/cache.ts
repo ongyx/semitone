@@ -7,7 +7,10 @@ import {
 import { Csproj } from "./csproj"
 import * as settings from "./settings"
 
-const CSPROJ_GLOB = "**/*.csproj"
+/**
+ * The glob for finding project files.
+ */
+export const PROJECT_GLOB = "**/*.csproj"
 
 /**
  * Cache for MSBuild project files.
@@ -18,7 +21,7 @@ export class Cache {
 
 	constructor(context: ExtensionContext) {
 		this.projects = new Map()
-		this.watcher = workspace.createFileSystemWatcher(CSPROJ_GLOB)
+		this.watcher = workspace.createFileSystemWatcher(PROJECT_GLOB)
 
 		// Remove project file from the cache on file change or delete.
 		this.watcher.onDidChange((uri) => this.invalidate(uri))

@@ -1,6 +1,7 @@
 import * as path from "node:path"
 import { minimatch } from "minimatch"
 import {
+	type ConfigurationTarget,
 	type ExtensionContext,
 	type Uri,
 	type WorkspaceConfiguration,
@@ -33,6 +34,14 @@ export interface ProjectFile {
 	glob: string
 }
 
+// Sadly, vscode doesn't export this type.
+// See https://stackoverflow.com/a/75806803 for this neat trick.
+declare const inspectFn: WorkspaceConfiguration["inspect"]
+/**
+ * The successful result of {@link WorkspaceConfiguration.inspect}.
+ */
+export type InspectResult<T> = NonNullable<ReturnType<typeof inspectFn<T>>>
+
 /**
  * The possible values for the autoAdd and autoDelete setting.
  */
@@ -56,6 +65,28 @@ export function getConfig(): WorkspaceConfiguration {
  */
 export function getProjectFiles(): ProjectFile[] {
 	return getConfig().get<ProjectFile[]>("projectFiles", [])
+}
+
+/**
+ * Inspects the projectFiles setting.
+ * @returns The inspect result, or undefined if the setting is not defined.
+ */
+export function inspectProjectFiles():
+	| InspectResult<ProjectFile[]>
+	| undefined {
+	return getConfig().inspect("projectFiles")
+}
+
+/**
+ * Sets the projectFiles setting.
+ * @param value The value to set.
+ * @param target The config target.
+ */
+export async function setProjectFiles(
+	value: ProjectFile[],
+	target: ConfigurationTarget,
+): Promise<void> {
+	await getConfig().update("projectFiles", value, target)
 }
 
 /**

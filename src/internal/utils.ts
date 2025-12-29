@@ -31,6 +31,15 @@ export interface NodeYield {
 }
 
 /**
+ * Adds a space before every uppercase letter.
+ * @param s The string to space case.
+ * @returns The space cased string.
+ */
+export function spaceCase(s: string): string {
+	return s.replace(/([A-Z])/g, " $1").trim()
+}
+
+/**
  * Checks if a node is a {@link Text} node with only whitespace.
  * @param node The node.
  * @returns True if so, otherwise false.

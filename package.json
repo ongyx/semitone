@@ -59,15 +59,27 @@
 		"commands": [
 			{
 				"command": "extension.csproj.add",
-				"title": "csproj: Include in Project"
+				"title": "csproj: Include in project"
 			},
 			{
 				"command": "extension.csproj.remove",
-				"title": "csproj: Remove from Project"
+				"title": "csproj: Remove from project"
+			},
+			{
+				"command": "extension.csproj.refresh",
+				"title": "csproj: Refresh file status"
+			},
+			{
+				"command": "extension.csproj.configure",
+				"title": "csproj: Configure project files"
+			},
+			{
+				"command": "extension.csproj.addIgnoredPath",
+				"title": "csproj: Add to ignored paths"
 			},
 			{
 				"command": "extension.csproj.clearIgnoredPaths",
-				"title": "csproj: Clear Ignored Paths"
+				"title": "csproj: Clear ignored paths"
 			}
 		],
 		"configuration": {
