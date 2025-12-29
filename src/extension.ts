@@ -24,6 +24,10 @@ const DEBOUNCE_REMOVE = 2000
 let extensionImpl: Ext | undefined
 
 export async function activate(context: ExtensionContext) {
+	if (!settings.getEnabled()) {
+		return
+	}
+
 	extensionImpl = new Ext(context)
 	await extensionImpl.activate()
 }

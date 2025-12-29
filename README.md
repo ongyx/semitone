@@ -1,7 +1,12 @@
-# VS Code `.csproj` Extension
+# Semitone
 
-This extension will helps you keep your csproj files in sync when using VS Code.
-This is useful if you work in a team that uses both VS Code and Visual Studio.
+![icon](img/icon.png "Icon")
+
+Keep your `.csproj` synchronized with new files. Handy for teams who use VS Code and Visual Studio, or if you don't want to wait for Unity domain reloads to add files to the project!
+
+## Migrating from [vscode-csproj]
+
+To preserve compatibility, settings are still prefixed with `csproj`. The `silentDeletion` setting has been replaced with `autoRemove` - refer to [Extension Settings](#extension-settings).
 
 ## Demo
 
@@ -17,17 +22,17 @@ This is useful if you work in a team that uses both VS Code and Visual Studio.
 
 ## How it Works
 
-When you switch to or save a file not in the nearest `.csproj` up the file system tree, you will prompted.
+When you switch to or save a file not in a matching project specified by `projectFiles`, you will prompted.
 
 ![Prompt](img/demo-prompt.png "Prompt")
 
 Choosing "Close" will add an item to the status bar and stop asking you while you have the file open.
 
-| **File Not in csproj** | **File Contained in csproj**
+| **File not in project** | **File contained in project**
 |------------------------|------------------------------
-| ![Add to csproj](img/demo-status-bar.png) | ![Contained in csproj](img/demo-status-bar-contained.png)
+| ![Add to project](img/demo-status-bar.png) | ![Contained in project](img/demo-status-bar-contained.png)
 
-You can add a file to csproj via the command palette:
+You can add a file to the project via the command palette:
 
 ![Command Palette](img/demo-command.png "Command Palette")
 
@@ -41,34 +46,33 @@ This extension contributes the following settings:
 
 | **Setting Key**         | **Description**
 |-------------------------|-----------------
-| `csproj.enable`         | Enable/disable this extension.
-| `csproj.itemType`       | Mapping from file extension to csproj XML element. Defaults to: <br/> `{ "*": "Content", ".ts": "TypeScriptCompile" }`
-| `csproj.silentDeletion` | Silently delete items from csproj when their corresponding files are removed. Default: `false`.
-| `csproj.includeRegex`   | Regular expression to match files you want to add to csproj.
-| `csproj.excludeRegex`   | Regular expression to exclude files you do not want to add to csproj.
-
+| `csproj.enable`         | Enable or disable this extension.
+| `csproj.projectFiles`   | Lists projects to use for specific files or directories.
+| `csproj.itemType`       | Maps file extensions to item types. Defaults to <br/> `{ "*": "Content", ".cs": "Compile", ".ts": "TypeScriptCompile" }`
+| `csproj.includeRegex`   | Regular expression to match files you want to add to the project. Defaults to `.*`.
+| `csproj.excludeRegex`   | Regular expression to exclude files you do not want to add to the project. Defaults to `(\\.csproj\|\\.sln\|\\.slnx)$`.
+| `csproj.autoAdd`        | Enable, disable, or prompt for adding items when new files are opened or saved. Defaults to `prompt`.
+| `csproj.autoRemove`     | Enable, disable, or prompt for removing items when their corresponding files are deleted. Defaults to `prompt`.
 
 These regular expressions will prevent unwanted prompts. If a file matches `includeRegex` *and* `excludeRegex`, it will be excluded.
 
-The regular expressions will prevent this extension from prompting for action, but it intentionally will not
-prevent you from adding via the command palette or a context menu. _However_, if you click "Include in Project" on
-a directory, `files.exclude`, your saved ignore list, `csproj.includeRegex` and `csproj.excludeRegex` will be honored.
+`autoAdd`, `autoRemove`, `includeRegex`, and `excludeRegex` do not apply when using commands directly via the Command Palette or a context menu. However, using "csproj: Include in project" on a directory will honor `includeRegex` and `excludeRegex` for the files within.
 
 ## Links
 
-* [GitHub Repository](https://github.com/DerFlatulator/vscode-csproj)
-* [Marketplace Entry](https://marketplace.visualstudio.com/items?itemName=lucasazzola.vscode-csproj)
+* [GitHub Repository](https://github.com/ongyx/semitone)
+* [Marketplace Entry](https://marketplace.visualstudio.com/items?itemName=ongyx.semitone)
 
 ## Release Notes
 
-### Most Recent Release (0.7.0)
+Please refer to Github for the [full release history](https://github.com/ongyx/semitone/releases).
 
-Features:
+### 0.1.0
 
-* Set `.cs` files to `Compile` by default ([#10](https://github.com/DerFlatulator/vscode-csproj/issues/10)).
-
-### See GitHub for [full release history](https://github.com/DerFlatulator/vscode-csproj/releases)
+Initial fork from [vscode-csproj].
 
 ## License
 
-MIT
+MIT.
+
+[vscode-csproj]: https://github.com/azz/vscode-csproj

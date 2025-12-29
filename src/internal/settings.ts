@@ -60,6 +60,14 @@ export function getConfig(): WorkspaceConfiguration {
 }
 
 /**
+ * Returns the enabled setting.
+ * @returns The value.
+ */
+export function getEnabled(): boolean {
+	return getConfig().get<boolean>("enabled", true)
+}
+
+/**
  * Returns the projectFiles setting.
  * @returns The value.
  */

@@ -1,18 +1,19 @@
 {
-	"name": "vscode-csproj",
-	"displayName": "VS Code .csproj",
-	"description": "Add/remove files from .csproj.",
-	"version": "0.7.0",
-	"publisher": "lucasazzola",
+	"name": "semitone",
+	"displayName": "Semitone",
+	"description": "Synchronize files with items in .csproj files.",
+	"version": "0.1.0",
+	"publisher": "ongyx",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/azz/vscode-csproj.git"
+		"url": "https://github.com/ongyx/semitone.git"
 	},
 	"engines": {
 		"vscode": "^1.100.0"
 	},
 	"categories": [
+		"Programming Languages",
 		"Other"
 	],
 	"activationEvents": [
@@ -20,6 +21,7 @@
 	],
 	"icon": "img/icon.png",
 	"main": "./out/extension.js",
+	"private": true,
 	"scripts": {
 		"clean": "rimraf out",
 		"fix": "npx @biomejs/biome check --write",
@@ -71,7 +73,7 @@
 			},
 			{
 				"command": "extension.csproj.configure",
-				"title": "csproj: Configure project files"
+				"title": "csproj: Configure projects"
 			},
 			{
 				"command": "extension.csproj.addIgnoredPath",
@@ -99,7 +101,7 @@
 						"properties": {
 							"path": {
 								"type": "string",
-								"description": "The path to the project file."
+								"description": "The path to the project."
 							},
 							"glob": {
 								"type": "string",
@@ -108,7 +110,7 @@
 						}
 					},
 					"default": [],
-					"description": "The project files to sync to in order of priority."
+					"description": "The projects to sync to in order of priority."
 				},
 				"csproj.itemType": {
 					"type": [
@@ -151,7 +153,7 @@
 						"Don't prompt to add new items."
 					],
 					"default": "prompt",
-					"description": "Whether or not to add items to the project file when new files are opened."
+					"description": "Whether or not to add items when new files are opened or saved."
 				},
 				"csproj.autoDelete": {
 					"type": "string",
@@ -166,7 +168,7 @@
 						"Don't prompt to remove deleted items."
 					],
 					"default": "prompt",
-					"description": "Whether or not to remove items from the project file when their files are deleted."
+					"description": "Whether or not to remove items when their corresponding files are deleted."
 				}
 			}
 		},
