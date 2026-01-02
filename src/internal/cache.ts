@@ -8,12 +8,12 @@ import { Csproj } from "./csproj"
 import * as settings from "./settings"
 
 /**
- * The glob for finding project files.
+ * The glob for finding projects.
  */
 export const PROJECT_GLOB = "**/*.csproj"
 
 /**
- * Cache for MSBuild project files.
+ * Cache for MSBuild projects.
  */
 export class Cache {
 	private projects: Map<string, Csproj>
@@ -23,7 +23,7 @@ export class Cache {
 		this.projects = new Map()
 		this.watcher = workspace.createFileSystemWatcher(PROJECT_GLOB)
 
-		// Remove project file from the cache on file change or delete.
+		// Remove project from the cache on file change or delete.
 		this.watcher.onDidChange((uri) => this.invalidate(uri))
 		this.watcher.onDidDelete((uri) => this.invalidate(uri))
 
@@ -31,9 +31,9 @@ export class Cache {
 	}
 
 	/**
-	 * Opens a project file and adds it to the cache.
-	 * @param uri The URI of the project file.
-	 * @returns The cached or opened project file.
+	 * Opens a project and adds it to the cache.
+	 * @param uri The URI of the project.
+	 * @returns The cached or opened project.
 	 */
 	async openProject(uri: Uri): Promise<Csproj> {
 		const key = uri.toString()
@@ -48,9 +48,9 @@ export class Cache {
 	}
 
 	/**
-	 * Finds the project file to use for the URI according to the `projectFiles` setting.
+	 * Finds the project to use for the URI according to the `projectFiles` setting.
 	 * @param uri The URI.
-	 * @returns The cached or opened project file for the URI.
+	 * @returns The cached or opened project for the URI.
 	 */
 	async findProject(uri: Uri): Promise<Csproj | undefined> {
 		const folder = workspace.getWorkspaceFolder(uri)
@@ -58,19 +58,19 @@ export class Cache {
 			return
 		}
 
-		// Get the first project file with a matching glob for the document URI.
+		// Get the first project with a matching glob for the document URI.
 		const projectPath = settings.getProjectFileForUri(uri)?.path
 		if (projectPath === undefined) {
 			return
 		}
 
-		// Open the project file in the workspace of the given document.
+		// Open the project in the workspace of the given document.
 		return this.openProject(Uri.joinPath(folder.uri, projectPath))
 	}
 
 	/**
-	 * Removes a project file from the cache. If the URI is not in the cache, this is a no-op.
-	 * @param doSave Whether or not to save the project file first.
+	 * Removes a project from the cache. If the URI is not in the cache, this is a no-op.
+	 * @param doSave Whether or not to save the project first.
 	 * @returns True if the file was cached, otherwise false.
 	 */
 	async invalidate(uri: Uri, doSave: boolean = false): Promise<boolean> {
@@ -78,8 +78,8 @@ export class Cache {
 	}
 
 	/**
-	 * Invalidates the cache and clears all project files.
-	 * @param doSave Whether or not to save the project files first.
+	 * Invalidates the cache and clears all projects.
+	 * @param doSave Whether or not to save the projects first.
 	 */
 	async clear(doSave: boolean = false) {
 		for (const key of this.projects.keys()) {

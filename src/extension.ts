@@ -20,10 +20,6 @@ import { Status, StatusBar } from "./internal/statusbar"
 let extImpl: Ext | undefined
 
 export async function activate(context: ExtensionContext) {
-	if (!settings.getEnabled()) {
-		return
-	}
-
 	extImpl = new Ext(context)
 	await extImpl.activate()
 }
@@ -106,14 +102,14 @@ export class Ext {
 				clearIgnoredPathsCommand.bind(undefined, this),
 			),
 
-			// When a document is saved without a project file, add it to its matching project file.
+			// When a document is saved without a project, add it to its matching project.
 			workspace.onDidSaveTextDocument(async (d) => {
 				if (this.statusBar.status === Status.Unavailable) {
 					await onOpen(d.uri)
 				}
 			}),
 
-			// When the active text editor changes, add the document to its matching project file.
+			// When the active text editor changes, add the document to its matching project.
 			window.onDidChangeActiveTextEditor(async (t) => {
 				if (t !== undefined) {
 					// Clear status first, in case there are any prompts.

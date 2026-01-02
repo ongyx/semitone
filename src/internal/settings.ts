@@ -21,11 +21,11 @@ export interface ItemTypes {
 }
 
 /**
- * A project file to use for a specific file or directory.
+ * A project to use for a specific file or directory.
  */
 export interface ProjectFile {
 	/**
-	 * The path to the project file.
+	 * The path to the project.
 	 */
 	path: string
 	/**
@@ -60,14 +60,6 @@ export function getConfig(): WorkspaceConfiguration {
 }
 
 /**
- * Returns the enabled setting.
- * @returns The value.
- */
-export function getEnabled(): boolean {
-	return getConfig().get<boolean>("enabled", true)
-}
-
-/**
  * Returns the projectFiles setting.
  * @returns The value.
  */
@@ -98,9 +90,9 @@ export async function setProjectFiles(
 }
 
 /**
- * Returns the project file whose glob matches the URI.
+ * Returns the project whose glob matches the URI.
  * @param uri The URI to match against.
- * @returns The project file, or undefined if no match was found.
+ * @returns The project, or undefined if no match was found.
  */
 export function getProjectFileForUri(uri: Uri): ProjectFile | undefined {
 	const rel = workspace.asRelativePath(uri)

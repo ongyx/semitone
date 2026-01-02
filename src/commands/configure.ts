@@ -40,14 +40,14 @@ class DecisionItem implements QuickPickItem {
 }
 
 /**
- * A quick pick item for adding a project file.
+ * A quick pick item for adding a project.
  */
 class AddItem implements QuickPickItem {
-	label: string = "$(add) Add project file..."
+	label: string = "$(add) Add project..."
 }
 
 /**
- * A quick pick item for an existing project file.
+ * A quick pick item for an existing project.
  */
 class ExistingItem implements QuickPickItem {
 	file: ProjectFile
@@ -75,7 +75,7 @@ class ExistingItem implements QuickPickItem {
 }
 
 /**
- * A quick pick item for removing an existing project file.
+ * A quick pick item for removing an existing project.
  */
 class RemoveExistingItem implements QuickPickItem {
 	label: string
@@ -86,7 +86,7 @@ class RemoveExistingItem implements QuickPickItem {
 }
 
 /**
- * A quick pick item for shifting the position of an existing project file.
+ * A quick pick item for shifting the position of an existing project.
  */
 class ShiftExistingItem implements QuickPickItem {
 	isUpOrDown: boolean
@@ -94,12 +94,12 @@ class ShiftExistingItem implements QuickPickItem {
 
 	constructor(existingItem: ExistingItem, isUpOrDown: boolean) {
 		this.isUpOrDown = isUpOrDown
-		this.label = `$(${isUpOrDown ? "arrow-up" : "arrow-down"}) Shift ${existingItem.file.path} ${isUpOrDown ? "above" : "below"} previous project file`
+		this.label = `$(${isUpOrDown ? "arrow-up" : "arrow-down"}) Shift ${existingItem.file.path} ${isUpOrDown ? "above" : "below"} previous project`
 	}
 }
 
 /**
- * A quick pick item for selecting a project file path.
+ * A quick pick item for selecting a project path.
  */
 class SelectPathItem implements QuickPickItem {
 	uri: Uri
@@ -114,7 +114,7 @@ class SelectPathItem implements QuickPickItem {
 }
 
 /**
- * A quick pick item for adding a custom project file path.
+ * A quick pick item for adding a custom project path.
  */
 class CustomPathItem implements QuickPickItem {
 	label: string = "$(edit) Add custom path..."
@@ -182,9 +182,8 @@ async function mainMenu(
 	]
 
 	return window.showQuickPick(items, {
-		title: "Configure project files",
-		placeHolder:
-			"Pick an existing project file, or add a new one (type to search)",
+		title: "Configure projects",
+		placeHolder: "Pick an existing project, or add a new one (type to search)",
 	})
 }
 
@@ -210,7 +209,7 @@ async function modifyMenu(
 	items.push(new RemoveExistingItem(existingItem))
 
 	const item = await window.showQuickPick(items, {
-		title: "Modify project file",
+		title: "Modify project",
 		placeHolder: "(type to search)",
 	})
 
@@ -260,7 +259,7 @@ async function pickPathToAdd(): Promise<string | undefined> {
 		...files.map((u) => new SelectPathItem(u)),
 	]
 	const item = await window.showQuickPick(items, {
-		title: "Add project file (1/3)",
+		title: "Add project (1/3)",
 		placeHolder: `Pick an existing path to add, or add a custom path (type to search)`,
 	})
 
@@ -274,7 +273,7 @@ async function pickPathToAdd(): Promise<string | undefined> {
 
 async function inputGlob(): Promise<string | undefined> {
 	return await window.showInputBox({
-		title: "Add project file (2/3)",
+		title: "Add project (2/3)",
 		prompt:
 			"Enter the glob to identify files for adding to/removal from the project.",
 		value: "**/*",
@@ -286,7 +285,7 @@ async function pickConfigTarget(): Promise<ConfigurationTarget | undefined> {
 		.filter((t) => typeof t === "number")
 		.map((t) => new ConfigTargetItem(t))
 	const item = await window.showQuickPick(items, {
-		title: "Add project file (3/3)",
+		title: "Add project (3/3)",
 		placeHolder: "Pick where to add the configuration to.",
 	})
 
@@ -299,8 +298,8 @@ async function removeProjectFile(
 ): Promise<void> {
 	const items = [new DecisionItem(Decision.Yes), new DecisionItem(Decision.No)]
 	const item = await window.showQuickPick(items, {
-		title: "Remove project file",
-		placeHolder: `Remove the project file ${removeItem.file.path} (${removeItem.file.glob}) from ${getTargetName(removeItem.target)} settings?`,
+		title: "Remove project",
+		placeHolder: `Remove the project ${removeItem.file.path} (${removeItem.file.glob}) from ${getTargetName(removeItem.target)} settings?`,
 	})
 
 	if (item?.decision === Decision.Yes) {

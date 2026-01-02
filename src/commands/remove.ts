@@ -13,7 +13,7 @@ const pending: { uri: Uri; csproj: Csproj }[] = []
 let removePendingDebounced: (() => Promise<void>) | undefined
 
 /**
- * Removes a file or directory of files of from their matching project file.
+ * Removes a file or directory of files of from their matching project.
  * NOTE:
  * @param uri The file or directory URI.
  * @param options The options.
@@ -141,10 +141,10 @@ async function removeFileInternal(
 }
 
 /**
- * Asks the user to decide if pending files should be removed from their project file.
+ * Asks the user to decide if pending files should be removed from their project.
  * This depends on the `csproj.autoRemove` setting.
  * @param filename The name of the file to remove.
- * @param csproj The project file to remove to.
+ * @param csproj The project to remove to.
  * @returns The user's decision.
  */
 async function askToRemove(): Promise<Decision> {
@@ -160,8 +160,8 @@ async function askToRemove(): Promise<Decision> {
 		case settings.AutoSetting.PROMPT: {
 			const msg =
 				pending.length > 1
-					? `${pending.length} files were deleted, would you like to remove them from their project files?`
-					: `${path.basename(pending[0].uri.fsPath)} was deleted, would you like to remove it from ${pending[0].csproj.name}?`
+					? `Would you like to remove ${pending.length} files from their project?`
+					: `Would you like to remove ${path.basename(pending[0].uri.fsPath)} from ${pending[0].csproj.name}?`
 			// Ask the user.
 			return (
 				(await window.showInformationMessage(msg, Decision.Yes, Decision.No)) ??

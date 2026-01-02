@@ -36,8 +36,8 @@ export class Csproj {
 	private readonly indent: Indent
 
 	/**
-	 * Parses a project file on disk.
-	 * @param uri The URI of the project file.
+	 * Parses a project on disk.
+	 * @param uri The URI of the project.
 	 * @returns The project.
 	 */
 	static async open(uri: Uri): Promise<Csproj> {
