@@ -7,7 +7,7 @@ import { type CommandOptions, Decision } from "./common"
 import { addIgnoredPathCommand } from "./ignored"
 
 /**
- * Adds a file or directory of files to their matching project file.
+ * Adds a file or directory of files to their matching project.
  * If the URI is not an absolute path or it ends with `.csproj`, this is a no-op.
  * @param uri The file or directory URI.
  * @param options The options.
@@ -39,7 +39,7 @@ export async function addCommand(
 				csproj.save()
 			}
 		} else {
-			console.log(`extension.csproj#add(${uri.fsPath}): project file not found`)
+			console.log(`extension.csproj#add(${uri.fsPath}): project not found`)
 			if (options.verbose) {
 				ext.statusBar.projectNotFound()
 			}
@@ -55,9 +55,9 @@ export async function addCommand(
 }
 
 /**
- * Adds a file to the project file.
+ * Adds a file to the project.
  * @param uri The file URI.
- * @param csproj The project file.
+ * @param csproj The project.
  * @param options The options.
  * @returns True if the file was added, false otherwise.
  */
@@ -113,18 +113,18 @@ async function addFileInternal(
 }
 
 /**
- * Adds all files in the directory to their matching project file.
+ * Adds all files in the directory to their matching project.
  * Make sure to call {@link Csproj.save} afterward.
  * @param uri The directory URI.
  * @param options The options.
- * @returns The project files.
+ * @returns The projects.
  */
 async function addDirInternal(
 	ext: Ext,
 	uri: Uri,
 	options: CommandOptions,
 ): Promise<Csproj[]> {
-	const changed: Map<Uri, Csproj> = new Map()
+	const changed: Map<string, Csproj> = new Map()
 	const files = await workspace.findFiles(new RelativePattern(uri, "**/*"))
 	const filter = new settings.UriFilter(ext.context)
 	let added = 0
@@ -141,7 +141,7 @@ async function addDirInternal(
 				isEvent: false,
 			}))
 		) {
-			changed.set(csproj.uri, csproj)
+			changed.set(csproj.uri.toString(), csproj)
 			added++
 		} else {
 			skipped++
@@ -158,10 +158,10 @@ async function addDirInternal(
 }
 
 /**
- * Asks the user to decide if a file should be added to a project file.
+ * Asks the user to decide if a file should be added to a project.
  * This depends on the `csproj.autoAdd` setting.
  * @param filename The name of the file to add.
- * @param csproj The project file to add to.
+ * @param csproj The project to add to.
  * @returns The user's decision.
  */
 async function askToAdd(filename: string, csproj: Csproj): Promise<Decision> {

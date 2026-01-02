@@ -13,6 +13,7 @@ import type { InspectResult, ProjectFile } from "../internal/settings"
 import * as settings from "../internal/settings"
 import { spaceCase } from "../internal/utils"
 import { Decision } from "./common"
+import { refreshCommand } from "./refresh"
 
 /**
  * A quick pick separator.
@@ -147,7 +148,7 @@ class ConfigTargetItem implements QuickPickItem {
 /**
  * Shows a dialog for configuing the projectFiles setting.
  */
-export async function configureCommand(_ext: Ext) {
+export async function configureCommand(ext: Ext) {
 	const inspect = settings.inspectProjectFiles()
 	if (inspect === undefined) {
 		window.showErrorMessage("Failed to get the projectFiles setting.")
@@ -160,6 +161,8 @@ export async function configureCommand(_ext: Ext) {
 	} else if (item instanceof ExistingItem) {
 		await modifyMenu(inspect, item)
 	}
+
+	await refreshCommand(ext)
 }
 
 /**

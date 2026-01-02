@@ -49,9 +49,5 @@ export async function addIgnoredPathCommand(
  */
 export async function clearIgnoredPathsCommand(ext: Ext) {
 	await settings.setIgnoredPaths(ext.context, [])
-
-	const current = window.activeTextEditor?.document.uri
-	if (current !== undefined) {
-		await refreshCommand(ext, current)
-	}
+	await refreshCommand(ext)
 }

@@ -1,4 +1,3 @@
-import pDebounce from "p-debounce"
 import {
 	commands,
 	type ExtensionContext,
@@ -7,34 +6,31 @@ import {
 	workspace,
 } from "vscode"
 import { addCommand } from "./commands/add"
-import { Decision } from "./commands/common"
 import { configureCommand } from "./commands/configure"
 import {
 	addIgnoredPathCommand,
 	clearIgnoredPathsCommand,
 } from "./commands/ignored"
 import { refreshCommand } from "./commands/refresh"
-import { askToRemove, removeCommand } from "./commands/remove"
+import { removeCommand } from "./commands/remove"
 import { Cache } from "./internal/cache"
-import type { Csproj } from "./internal/csproj"
 import * as settings from "./internal/settings"
 import { Status, StatusBar } from "./internal/statusbar"
 
-const DEBOUNCE_REMOVE = 2000
-let extensionImpl: Ext | undefined
+let extImpl: Ext | undefined
 
 export async function activate(context: ExtensionContext) {
 	if (!settings.getEnabled()) {
 		return
 	}
 
-	extensionImpl = new Ext(context)
-	await extensionImpl.activate()
+	extImpl = new Ext(context)
+	await extImpl.activate()
 }
 
 export async function deactivate() {
-	await extensionImpl?.deactivate()
-	extensionImpl = undefined
+	await extImpl?.deactivate()
+	extImpl = undefined
 }
 
 /**
@@ -44,13 +40,11 @@ export class Ext {
 	context: ExtensionContext
 	cache: Cache
 	statusBar: StatusBar
-	pendingRemoval: { uri: Uri; csproj: Csproj }[]
 
 	constructor(context: ExtensionContext) {
 		this.context = context
 		this.cache = new Cache(context)
 		this.statusBar = new StatusBar(context)
-		this.pendingRemoval = []
 	}
 
 	/**
@@ -68,35 +62,21 @@ export class Ext {
 
 		const onOpen = async (uri: Uri) => {
 			const options = { verbose: true, isEvent: true }
+			// Refresh status on open.
 			await refreshCommand(this, uri, options)
-			await addCommand(this, uri, options)
-		}
 
-		// NOTE: Debouncing is necessary to avoid message spam when a lot of delete events occur.
-		const removePending = pDebounce(async () => {
-			if ((await askToRemove(this)) === Decision.Yes) {
-				for (const { uri, csproj } of this.pendingRemoval) {
-					await removeCommand(this, uri, csproj, {
-						verbose: false,
-						isEvent: true,
-					})
-				}
+			if (this.statusBar.status === Status.NotInProject) {
+				await addCommand(this, uri, options)
 			}
-
-			// Clear array in-place.
-			this.pendingRemoval.length = 0
-		}, DEBOUNCE_REMOVE)
+		}
 
 		const onDelete = async (uri: Uri) => {
 			const filter = new settings.UriFilter(this.context)
-			if (!filter.isValid(uri)) {
-				return
-			}
-
-			const csproj = await this.cache.findProject(uri)
-			if (csproj !== undefined) {
-				this.pendingRemoval.push({ uri, csproj })
-				await removePending()
+			if (filter.isValid(uri)) {
+				const csproj = await this.cache.findProject(uri)
+				if (csproj !== undefined) {
+					await removeCommand(this, uri, { verbose: true, isEvent: true })
+				}
 			}
 		}
 

@@ -16,7 +16,7 @@ export const PROJECT_GLOB = "**/*.csproj"
  * Cache for MSBuild project files.
  */
 export class Cache {
-	private projects: Map<Uri, Csproj>
+	private projects: Map<string, Csproj>
 	private watcher: FileSystemWatcher
 
 	constructor(context: ExtensionContext) {
@@ -36,10 +36,12 @@ export class Cache {
 	 * @returns The cached or opened project file.
 	 */
 	async openProject(uri: Uri): Promise<Csproj> {
-		let csproj = this.projects.get(uri)
+		const key = uri.toString()
+
+		let csproj = this.projects.get(key)
 		if (csproj === undefined) {
 			csproj = await Csproj.open(uri)
-			this.projects.set(uri, csproj)
+			this.projects.set(key, csproj)
 		}
 
 		return csproj
@@ -72,12 +74,7 @@ export class Cache {
 	 * @returns True if the file was cached, otherwise false.
 	 */
 	async invalidate(uri: Uri, doSave: boolean = false): Promise<boolean> {
-		const csproj = this.projects.get(uri)
-		if (csproj !== undefined && doSave) {
-			await csproj.save()
-		}
-
-		return this.projects.delete(uri)
+		return this.invalidateInternal(uri.toString(), doSave)
 	}
 
 	/**
@@ -85,8 +82,20 @@ export class Cache {
 	 * @param doSave Whether or not to save the project files first.
 	 */
 	async clear(doSave: boolean = false) {
-		for (const uri of this.projects.keys()) {
-			await this.invalidate(uri, doSave)
+		for (const key of this.projects.keys()) {
+			await this.invalidateInternal(key, doSave)
 		}
+	}
+
+	private async invalidateInternal(
+		key: string,
+		doSave: boolean,
+	): Promise<boolean> {
+		const csproj = this.projects.get(key)
+		if (csproj !== undefined && doSave) {
+			await csproj.save()
+		}
+
+		return this.projects.delete(key)
 	}
 }

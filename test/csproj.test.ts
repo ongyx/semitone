@@ -43,6 +43,25 @@ const CSP_MULTIPLE_AFTER = `<?xml version="1.0" encoding="utf-8"?>
 </Project>
 `
 
+const CSP_ITEMGROUP_BEFORE = `<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ItemGroup>
+    <Compile Include="src\\Test1.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="index.html" />
+  </ItemGroup>
+</Project>
+`
+
+const CSP_ITEMGROUP_AFTER = `<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ItemGroup>
+    <Content Include="index.html" />
+  </ItemGroup>
+</Project>
+`
+
 describe("csproj.Csproj", () => {
 	let tfs: TempFs | undefined
 
@@ -72,6 +91,22 @@ describe("csproj.Csproj", () => {
 		})
 	})
 
+	describe("hasItem()", () => {
+		it("should report that the project has an item", async () => {
+			assert.ok(tfs)
+			await tfs.mock({
+				"Test.csproj": CSP_MODIFIED,
+				...MOCK_FILES,
+			})
+
+			const csproj = await Csproj.open(tfs.absuri("Test.csproj"))
+
+			assert.ok(csproj.hasItem(tfs.absuri("src/Test1.cs")))
+			assert.ok(csproj.hasItem(tfs.absuri("src/Test2.ts")))
+			assert.ok(csproj.hasItem(tfs.absuri("src/Test3.html")))
+		})
+	})
+
 	describe("removeItem()", () => {
 		it("should remove all items from the project", async () => {
 			assert.ok(tfs)
@@ -82,9 +117,9 @@ describe("csproj.Csproj", () => {
 
 			const csproj = await Csproj.open(tfs.absuri("Test.csproj"))
 
-			csproj.removeItem(tfs.absuri("src/Test1.cs"))
-			csproj.removeItem(tfs.absuri("src/Test2.ts"))
-			csproj.removeItem(tfs.absuri("src/Test3.html"))
+			assert.ok(csproj.removeItem(tfs.absuri("src/Test1.cs")))
+			assert.ok(csproj.removeItem(tfs.absuri("src/Test2.ts")))
+			assert.ok(csproj.removeItem(tfs.absuri("src/Test3.html")))
 
 			assert.strictEqual(csproj.serialize(), CSP_EMPTY)
 		})
@@ -98,10 +133,24 @@ describe("csproj.Csproj", () => {
 
 			const csproj = await Csproj.open(tfs.absuri("Test.csproj"))
 
-			csproj.removeItem(tfs.absuri("src/Test2.cs"))
-			csproj.removeItem(tfs.absuri("src/Test3.cs"))
+			assert.ok(csproj.removeItem(tfs.absuri("src/Test2.cs")))
+			assert.ok(csproj.removeItem(tfs.absuri("src/Test3.cs")))
 
 			assert.strictEqual(csproj.serialize(), CSP_MULTIPLE_AFTER)
+		})
+
+		it("should remove one itemgroup from the project", async () => {
+			assert.ok(tfs)
+			await tfs.mock({
+				"Test.csproj": CSP_ITEMGROUP_BEFORE,
+				...MOCK_FILES,
+			})
+
+			const csproj = await Csproj.open(tfs.absuri("Test.csproj"))
+
+			assert.ok(csproj.removeItem(tfs.absuri("src/Test1.cs")))
+
+			assert.strictEqual(csproj.serialize(), CSP_ITEMGROUP_AFTER)
 		})
 	})
 

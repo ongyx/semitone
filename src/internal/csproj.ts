@@ -96,18 +96,13 @@ export class Csproj {
 	/**
 	 * Removes items from the project.
 	 * @param uri The URI referenced by the item(s), or a directory URI.
-	 * @param isDirectory If true, all items prefixed by uri are removed.
 	 * @returns True if one or more items were removed, otherwise false.
 	 */
-	removeItem(uri: Uri, isDirectory: boolean = false): boolean {
+	removeItem(uri: Uri): boolean {
 		const rel = this.asRelativePath(uri, true)
 
-		const items = isDirectory
-			? // Find all items prefixed by the directory path.
-				this.xml(`ItemGroup > *[Include*="${rel}"]`)
-			: // Find all items with the file path.
-				this.xml(`ItemGroup > *[Include="${rel}"]`)
-
+		// Find all items with the file path.
+		const items = this.xml(`ItemGroup > *[Include="${rel}"]`)
 		items.remove()
 
 		// Remove any empty ItemGroups.

@@ -7,7 +7,7 @@ import type { AnyNode, ParentNode, Text } from "domhandler"
  */
 export interface Indent {
 	/**
-	 * The newline used in the document, usually '\r\n' for project files.
+	 * The newline used in the document, usually '\r\n' for projects.
 	 */
 	newline: string
 	/**
@@ -54,8 +54,12 @@ export function isWhitespace(node: AnyNode): boolean {
  * @param node The node.
  */
 export function trimBefore(doc: CheerioAPI, node: AnyNode) {
-	if (node.prev !== null && isWhitespace(node.prev)) {
-		doc(node.prev).remove()
+	let current = node.prev
+
+	while (current !== null && isWhitespace(current)) {
+		const prev = current.prev
+		doc(current).remove()
+		current = prev
 	}
 }
 
@@ -65,8 +69,12 @@ export function trimBefore(doc: CheerioAPI, node: AnyNode) {
  * @param node The node.
  */
 export function trimAfter(doc: CheerioAPI, node: AnyNode) {
-	if (node.next !== null && isWhitespace(node.next)) {
-		doc(node.next).remove()
+	let current = node.next
+
+	while (current !== null && isWhitespace(current)) {
+		const next = current.next
+		doc(current).remove()
+		current = next
 	}
 }
 
