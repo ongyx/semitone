@@ -1,71 +1,73 @@
 # Semitone
 
-![icon](img/icon.png "Icon")
+![](img/icon.png)
+
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/ongyx.semitone?label=VS%20Marketplace)][marketplace]
+[![Open VSX Version](https://img.shields.io/open-vsx/v/ongyx/semitone?label=Open%20VSX)][open-vsx]
 
 Keep your `.csproj` synchronized with new files. Handy for teams who use VS Code and Visual Studio, or if you don't want to wait for Unity domain reloads to add files to the project!
 
 ## Migrating from [vscode-csproj]
 
-To preserve compatibility, settings are still prefixed with `csproj`. The `silentDeletion` setting has been replaced with `autoRemove` - refer to [Extension Settings](#extension-settings).
+To preserve compatibility, settings are still prefixed with `csproj`. The `silentDeletion` setting has been replaced with `autoRemove` - refer to [Settings](#settings).
+
+## Usage
+
+Once you've added at least one project using the `csproj: Configure projects` command or configured the `csproj.projectFiles` setting, the extension will start syncing your files.
+Projects can be configured globally, per workspace, or per workspace folder.
+
+![](img/demo-configure.gif)
 
 ## Demo
 
-### Adding Files to a Project
-
-![DemoGif](img/demo.gif "Demonstration")
-
-### Removing Files from a Project
-
-| **Single File Deletion**  | **Multiple File Deletion**
-|---------------------------|--------------------------------
-| ![Single deletion example](img/demo-single-delete.gif) | ![Multiple deletion example](img/demo-multi-delete.gif)
+| Adding files          | Removing files           |
+| --------------------- | ------------------------ |
+| ![](img/demo-add.gif) | ![](img/demo-remove.gif) |
 
 ## How it Works
 
-When you switch to or save a file not in a matching project specified by `projectFiles`, you will prompted.
+When switching to or saving a file that matches a project specified in `csproj.projectFiles`, the extension will ask if you want to add the file to that project.
+Selecting "No" will not prompt again while the file is open, and selecting "Never" will add the file to the ignore list.
 
-![Prompt](img/demo-prompt.png "Prompt")
+![](img/demo-prompt.png)
 
-Choosing "Close" will add an item to the status bar and stop asking you while you have the file open.
+An open file has one of the following statuses:
 
-| **File not in project** | **File contained in project**
-|------------------------|------------------------------
-| ![Add to project](img/demo-status-bar.png) | ![Contained in project](img/demo-status-bar-contained.png)
+| In project                                                            | Not in project                                                            | Ignored                                                                           | Project Not Found                                                            |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| ![](img/status-in-project.png)<br>The file is contained in a project. | ![](img/status-not-in-project.png)<br>The file can be added to a project. | ![](img/status-ignored.png)<br>The file is ignored by user or workspace settings. | ![](img/status-project-not-found.png)<br>No project was found for this file. |
 
-You can add a file to the project via the command palette:
-
-![Command Palette](img/demo-command.png "Command Palette")
-
-Or via the context menu in the file explorer:
-
-![Context Menu](img/demo-context-menu.png "Context Menu")
-
-## Extension Settings
+## Settings
 
 This extension contributes the following settings:
 
-| **Setting Key**         | **Description**
-|-------------------------|-----------------
-| `csproj.enable`         | Enable or disable this extension.
-| `csproj.projectFiles`   | Lists projects to use for specific files or directories.
-| `csproj.itemType`       | Maps file extensions to item types. Defaults to <br/> `{ "*": "Content", ".cs": "Compile", ".ts": "TypeScriptCompile" }`
-| `csproj.includeRegex`   | Regular expression to match files you want to add to the project. Defaults to `.*`.
-| `csproj.excludeRegex`   | Regular expression to exclude files you do not want to add to the project. Defaults to `(\\.csproj\|\\.sln\|\\.slnx)$`.
-| `csproj.autoAdd`        | Enable, disable, or prompt for adding items when new files are opened or saved. Defaults to `prompt`.
-| `csproj.autoRemove`     | Enable, disable, or prompt for removing items when their corresponding files are deleted. Defaults to `prompt`.
+| Setting               | Type                                                         | Default Value                                                      | Description                                                                               |
+| --------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `csproj.projectFiles` | `[ { path: "/path/to/project.csproj", glob: "glob" }, ... ]` | `[]`                                                               | List of projects to use for specific globs.                                               |
+| `csproj.itemType`     | `{ "glob": "itemType" }`                                     | `{ "*": "Content", ".cs": "Compile", ".ts": "TypeScriptCompile" }` | Map of file extensions/globs to item types.                                               |
+| `csproj.includeRegex` | RegExp                                                       | `.*`                                                               | Regular expression for including files into projects.                                     |
+| `csproj.excludeRegex` | RegExp                                                       | `(\\.csproj\|\\.sln\|\\.slnx)$`                                    | Regular expression for excluding files from projects.                                     |
+| `csproj.autoAdd`      | `on`, `prompt`, `off`                                        | `prompt`                                                           | Enable, disable, or prompt for adding items when new files are opened or saved.           |
+| `csproj.autoRemove`   | `on`, `prompt`, `off`                                        | `prompt`                                                           | Enable, disable, or prompt for removing items when their corresponding files are deleted. |
 
-These regular expressions will prevent unwanted prompts. If a file matches `includeRegex` *and* `excludeRegex`, it will be excluded.
+Please refer to [minimatch] for supported glob syntax.
 
-`autoAdd`, `autoRemove`, `includeRegex`, and `excludeRegex` do not apply when using commands directly via the Command Palette or a context menu. However, using "csproj: Include in project" on a directory will honor `includeRegex` and `excludeRegex` for the files within.
+Files which do not match `csproj.includeRegex` or match `csproj.excludeRegex` will not be added automatically.
+These settings, along with `csproj.autoAdd` and `csproj.autoRemove`, do not affect running commands via the Command Palette or a context menu, unless the `csproj: Include in project` comamnd is used on a folder.
 
 ## Links
 
-* [GitHub Repository](https://github.com/ongyx/semitone)
-* [Marketplace Entry](https://marketplace.visualstudio.com/items?itemName=ongyx.semitone)
+* [Github Repository](github)
+* [Visual Studio Marketplace](marketplace)
+* [Open VSX Registry](open-vsx)
 
 ## Release Notes
 
 Please refer to Github for the [full release history](https://github.com/ongyx/semitone/releases).
+
+### 0.1.1
+
+Fixed cache-related bugs and updated README/LICENSE.
 
 ### 0.1.0
 
@@ -76,3 +78,7 @@ Initial fork from [vscode-csproj].
 MIT.
 
 [vscode-csproj]: https://github.com/azz/vscode-csproj
+[github]: https://github.com/ongyx/semitone
+[marketplace]: https://marketplace.visualstudio.com/items?itemName=ongyx.semitone
+[open-vsx]: https://open-vsx.org/extension/ongyx/semitone
+[minimatch]: https://github.com/isaacs/minimatch?tab=readme-ov-file#features

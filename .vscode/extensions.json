@@ -1,3 +1,7 @@
 {
-	"recommendations": ["biomejs.biome", "connor4312.esbuild-problem-matchers"]
+	"recommendations": [
+		"biomejs.biome",
+		"connor4312.esbuild-problem-matchers",
+		"yzhang.markdown-all-in-one"
+	]
 }
