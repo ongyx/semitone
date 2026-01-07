@@ -3,7 +3,6 @@ import {
 	MarkdownString,
 	StatusBarAlignment,
 	type StatusBarItem,
-	ThemeColor,
 	window,
 } from "vscode"
 import type { Csproj } from "./csproj"
@@ -11,9 +10,6 @@ import { EXT_NAME } from "./settings"
 
 const COMMAND_ADD = `extension.${EXT_NAME}.add`
 const COMMAND_REMOVE = `extension.${EXT_NAME}.remove`
-// See https://code.visualstudio.com/api/references/vscode-api#StatusBarItem
-const BG_ERROR = new ThemeColor("statusBarItem.errorBackground")
-const BG_WARNING = new ThemeColor("statusBarItem.warningBackground")
 
 /**
  * The possible file statuses.
@@ -69,7 +65,6 @@ export class StatusBar {
 	inProject(csproj: Csproj) {
 		this.item.text = `$(folder-active) Contained in ${csproj.name}`
 		this.item.command = COMMAND_REMOVE
-		this.item.backgroundColor = undefined
 		this.item.tooltip = new MarkdownString(
 			`Click to remove this file from the project.`,
 		)
@@ -84,7 +79,6 @@ export class StatusBar {
 	notInProject(csproj: Csproj) {
 		this.item.text = `$(folder) Add to ${csproj.name}`
 		this.item.command = COMMAND_ADD
-		this.item.backgroundColor = undefined
 		this.item.tooltip = new MarkdownString(
 			`Click to add this file to the project.`,
 		)
@@ -98,7 +92,6 @@ export class StatusBar {
 	projectNotFound() {
 		this.item.text = `$(question) Project not found`
 		this.item.command = undefined
-		this.item.backgroundColor = BG_ERROR
 		this.item.tooltip = new MarkdownString(
 			`File does not match to any project, please check your \`csproj.projectFiles\` user/workspace setting.`,
 		)
@@ -112,7 +105,6 @@ export class StatusBar {
 	ignored() {
 		this.item.text = `$(info) Ignored`
 		this.item.command = undefined
-		this.item.backgroundColor = BG_WARNING
 		this.item.tooltip = new MarkdownString(
 			`File is ignored by one of these user/workspace settings:
 * \`csproj.include\`

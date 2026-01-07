@@ -112,8 +112,9 @@ export class Ext {
 			// When the active text editor changes, add the document to its matching project.
 			window.onDidChangeActiveTextEditor(async (t) => {
 				if (t !== undefined) {
-					// Clear status first, in case there are any prompts.
 					await onOpen(t.document.uri)
+				} else {
+					this.statusBar.unavailable()
 				}
 			}),
 
